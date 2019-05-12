@@ -123,6 +123,8 @@ def write_rollup_config(ctx, plugins = [], root_dir = None, filename = "_%s.roll
     if node_modules_root == "node_modules" and ctx.attr.node_modules.label.package == "" and ctx.attr.node_modules.label.name == "node_modules_none":
         is_default_node_modules = True
 
+    named_exports = "{" + ",".join(["'%s':%s" % g for g in ctx.attr.named_exports.items()]) + "}"
+
     ctx.actions.expand_template(
         output = config,
         template = ctx.file._rollup_config_tmpl,
@@ -133,6 +135,7 @@ def write_rollup_config(ctx, plugins = [], root_dir = None, filename = "_%s.roll
             "TMPL_inputs": ",".join(["\"%s\"" % e for e in entry_points]),
             "TMPL_is_default_node_modules": "true" if is_default_node_modules else "false",
             "TMPL_module_mappings": str(mappings),
+            "TMPL_named_exports": named_exports,
             "TMPL_node_modules_root": node_modules_root,
             "TMPL_output_format": output_format,
             "TMPL_rootDir": root_dir,
@@ -628,6 +631,12 @@ ROLLUP_ATTRS = {
         Note that you can replace a version placeholder in the license file, by using
         the special version `0.0.0-PLACEHOLDER`. See the section on stamping in the README.""",
         allow_single_file = [".txt"],
+    ),
+    "named_exports": attr.string_list_dict(
+        doc = """A dict of named exports for commonjs.
+        The keys are the module names,
+        and the values are arrays of symbols exported by those modules.""",
+        default = {},
     ),
     "node_modules": attr.label(
         doc = """Dependencies from npm that provide some modules that must be

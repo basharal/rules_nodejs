@@ -19,6 +19,7 @@ const stampData = TMPL_stamp_data;
 const moduleMappings = TMPL_module_mappings;
 const nodeModulesRoot = 'TMPL_node_modules_root';
 const isDefaultNodeModules = TMPL_is_default_node_modules;
+const namedExports = TMPL_named_exports;
 
 if (DEBUG)
   console.error(`
@@ -31,6 +32,7 @@ Rollup: running with
   moduleMappings: ${JSON.stringify(moduleMappings)}
   nodeModulesRoot: ${nodeModulesRoot}
   isDefaultNodeModules: ${isDefaultNodeModules}
+  namedExports: ${namedExports}
 `);
 
 function fileExists(filePath) {
@@ -165,6 +167,11 @@ function notResolved(importee, importer) {
 const inputs = [TMPL_inputs];
 const enableCodeSplitting = inputs.length > 1;
 
+const resolvedNamedExports = Object.assign(
+  {},
+  ...Object.keys(namedExports).map(key => ({ [path.join(rootDir, key)]: namedExports[key] }))
+);
+
 const config = {
   resolveBazel,
   onwarn: (warning) => {
@@ -189,7 +196,9 @@ const config = {
       // with the amd plugin.
       include: /\.ngfactory\.js$/i,
     }),
-    commonjs(),
+    commonjs({
+      namedExports: resolvedNamedExports,
+    }),
     {
       name: 'notResolved',
       resolveId: notResolved,
