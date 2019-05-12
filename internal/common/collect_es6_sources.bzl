@@ -28,7 +28,9 @@ def collect_es6_sources(ctx):
         A file tree containing only production files.
     """
 
-    non_rerooted_files = [d for d in ctx.files.deps if d.is_source]
+    # Putting a genrule that generates js files for protos, breaks
+    # this code since the files will not have is_source set to true.
+    non_rerooted_files = ctx.files.deps
     if hasattr(ctx.attr, "srcs"):
         non_rerooted_files += ctx.files.srcs
     for dep in ctx.attr.deps:
